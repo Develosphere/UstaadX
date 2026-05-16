@@ -1,0 +1,56 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/mobile_app/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/mobile_app/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.0'
+        channel: 'stable'
+
+    - name: Cache Flutter packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.pub-cache
+          apps/mobile_app/.dart_tool
+        key: ${{ runner.os }}-flutter-${{ hashFiles('apps/mobile_app/pubspec.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-flutter-
+
+    - name: Install dependencies
+      working-directory: apps/mobile_app
+      run: flutter pub get
+
+    - name: Analyze code
+      working-directory: apps/mobile_app
+      run: flutter analyze
+
+    - name: Format check
+      working-directory: apps/mobile_app
+      run: dart format --set-exit-if-changed lib/
+
+    - name: Run tests
+      working-directory: apps/mobile_app
+      run: flutter test --coverage
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: apps/mobile_app/coverage/lcov.info
+        flags: mobile
