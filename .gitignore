@@ -95,3 +95,4 @@ Thumbs.db
 *.key
 secrets/
 credentials/
+apps/backend_api/app/core/config.py
